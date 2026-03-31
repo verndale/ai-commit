@@ -119,7 +119,11 @@ Releases are automated with **[semantic-release](https://github.com/semantic-rel
 
 ### Secrets and registry
 
-- **`NPM_TOKEN`** (repository or organization secret) — npm **automation** or granular token with **publish** rights for `@verndale/commit-ai`. The Release workflow sets both `NPM_TOKEN` and `NODE_AUTH_TOKEN` from it.
+- **`NPM_TOKEN`** (repository or organization secret) — must be able to **`npm publish`** this package in CI **without** an interactive one-time password. The Release workflow sets both `NPM_TOKEN` and `NODE_AUTH_TOKEN` from it.
+  - **If the job fails with `EOTP` / “This operation requires a one-time password”:** the account has **2FA** that applies to publishes, and the token is not allowed to bypass OTP in CI. Fix it in one of these ways:
+    - **Classic token:** npmjs.com → **Access Tokens** → **Generate New Token** (classic) → type **Automation** (not “Publish”). Store it as **`NPM_TOKEN`**. Automation tokens are for CI and skip OTP on publish.
+    - **Granular token:** **New Granular Access Token** → turn on **Bypass two-factor authentication (2FA)**. Under **Packages and scopes**, set permissions to **Read and write** for **`@verndale/commit-ai`** (not “No access”). Leave **Allowed IP ranges** empty unless your org requires it—GitHub Actions egress IPs are not a single fixed range. Copy the token into **`NPM_TOKEN`**.
+  - Alternatively, finish **[Trusted Publishing](https://docs.npmjs.com/trusted-publishers)** for this repo and package so OIDC can authorize publishes; you may still need a compatible token or npm-side setup until that path is fully enabled—see npm’s docs for your account type.
 - **`GITHUB_TOKEN`** — provided by Actions for API calls (GitHub Release, etc.). The checkout and git plugin use **`SEMANTIC_RELEASE_TOKEN`** when set; otherwise they use `GITHUB_TOKEN` (see below).
 
 **npm provenance:** [`.releaserc.json`](./.releaserc.json) sets `"provenance": true` on `@semantic-release/npm`, which matches **npm Trusted Publishing** from this GitHub repository. On [npmjs.com](https://www.npmjs.com/), enable **Trusted Publishing** for this package linked to **`verndale/commit-ai`** (or your fork’s repo if you test there). If publish fails until that is configured, either finish Trusted Publishing setup or temporarily set `"provenance": false` in `.releaserc.json` (you lose the provenance badge).
