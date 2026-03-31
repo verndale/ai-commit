@@ -17,6 +17,7 @@ pnpm add -D @verndale/commit-ai
 
 - **`OPENAI_API_KEY`** — Required for `commit-ai run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
 - The CLI loads **`.env`** from the current working directory (project root).
+- **Optional tooling** (see [`.env.example`](./.env.example)): `PR_*` for [`tools/open-pr.js`](./tools/open-pr.js) / the **Create or update PR** workflow; `RELEASE_NOTES_AI_*` for the semantic-release notes plugin. Use a GitHub PAT as **`GH_TOKEN`** (or `GITHUB_TOKEN`) when calling the GitHub API outside Actions.
 
 ## Commit policy (v2)
 
@@ -102,10 +103,24 @@ pnpm install
 
 Copy `.env.example` to `.env` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs this repo’s CLI (`node ./bin/cli.js run`; the published package exposes `commit-ai` in `node_modules/.bin` for dependents). Hooks under `.husky/` call **`pnpm exec commit-ai`** from this checkout.
 
+### Repository automation
+
+| Workflow | Trigger | Purpose |
+| --- | --- | --- |
+| [`.github/workflows/commitlint.yml`](./.github/workflows/commitlint.yml) | PRs to `main`, pushes to non-`main` branches | Commitlint on PR range or last push commit |
+| [`.github/workflows/pr.yml`](./.github/workflows/pr.yml) | Pushes (not `main`) and `workflow_dispatch` | Install deps, run **`pnpm open-pr`** (`node tools/open-pr.js`) — set **`PR_HEAD_BRANCH`** / **`PR_BASE_BRANCH`** in CI via env (workflow sets them). Use a PAT secret **`PR_BOT_TOKEN`** if branch protection requires it; otherwise document your org’s policy. |
+| [`.github/workflows/release.yml`](./.github/workflows/release.yml) | Push to **`main`** | **`semantic-release`** — version bump, `CHANGELOG.md`, git tag, npm publish (with provenance), GitHub Release |
+
+Optional **`pnpm open-pr`** locally: set **`GH_TOKEN`** (or **`GITHUB_TOKEN`**) and branch overrides **`PR_BASE_BRANCH`** / **`PR_HEAD_BRANCH`** as needed.
+
 ## Publishing (maintainers)
 
-1. Bump version: `pnpm version patch|minor|major` (creates a git tag).
-2. `pnpm publish` — CI can publish on tag when `NPM_TOKEN` is configured (see `.github/workflows/publish.yml`).
+Releases are automated with **[semantic-release](https://github.com/semantic-release/semantic-release)** on every push to **`main`** (see [`.releaserc.json`](./.releaserc.json) and [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs)). Configure repository secrets:
+
+- **`NPM_TOKEN`** — npm automation token with publish scope (used by `@semantic-release/npm`).
+- **`GITHUB_TOKEN`** is provided by Actions for the GitHub Release step.
+
+Tag-only npm publish was removed in favor of this flow to avoid double publishes. To try a release locally: `pnpm release` (requires appropriate tokens and git state; use a fork or `--dry-run` as appropriate).
 
 ## License
 

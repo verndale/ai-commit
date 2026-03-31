@@ -42,6 +42,8 @@
     "prepare": "husky",
     "commit": "node ./bin/cli.js run",
     "lint:commit": "commitlint --edit .git/COMMIT_EDITMSG --config lib/commitlint-preset.cjs",
+    "open-pr": "node tools/open-pr.js",
+    "release": "semantic-release",
     "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs');\""
   },
   "dependencies": {
@@ -54,6 +56,12 @@
     "openai": "^6.33.0"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "husky": "^9.1.7",
+    "semantic-release": "^25.0.3"
   }
 }

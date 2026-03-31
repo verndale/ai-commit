@@ -1,0 +1,45 @@
+name: Commit message lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.0"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint commit messages (PR range)
+        if: github.event_name == 'pull_request'
+        run: |
+          pnpm -s exec commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose \
+            --config lib/commitlint-preset.cjs
+
+      - name: Lint last commit (push)
+        if: github.event_name == 'push'
+        run: |
+          pnpm -s exec commitlint --from=HEAD~1 --to=HEAD --verbose --config lib/commitlint-preset.cjs
