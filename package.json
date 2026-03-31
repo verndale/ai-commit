@@ -6,7 +6,7 @@
   "author": "Verndale",
   "repository": {
     "type": "git",
-    "url": "https://github.com/verndale/commit-ai.git"
+    "url": "git+https://github.com/verndale/commit-ai.git"
   },
   "keywords": [
     "commit",
