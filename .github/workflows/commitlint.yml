@@ -3,6 +3,7 @@ name: Commit message lint
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches-ignore:
       - main
@@ -39,6 +40,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Lint PR title (squash merge becomes the commit on main)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$PR_TITLE" | pnpm -s exec commitlint --verbose --config lib/commitlint-preset.cjs
 
       - name: Lint commit messages (PR range)
         if: github.event_name == 'pull_request'

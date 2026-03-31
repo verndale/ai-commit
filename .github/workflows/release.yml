@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Use SEMANTIC_RELEASE_TOKEN (PAT with contents:write) when branch protection blocks GITHUB_TOKEN pushes.
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       # Org policy: only GitHub + org-owned actions — Corepack + actions/cache (no pnpm/action-setup).
       - name: Setup Node
@@ -49,7 +51,7 @@ jobs:
       - name: Run semantic-release
         env:
           HUSKY: "0"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_NOTES_AI: ${{ vars.RELEASE_NOTES_AI }}

@@ -109,16 +109,28 @@ Copy `.env.example` to `.env` and set **`OPENAI_API_KEY`**. After staging, **`pn
 | --- | --- | --- |
 | [`.github/workflows/commitlint.yml`](./.github/workflows/commitlint.yml) | PRs to `main`, pushes to non-`main` branches | Commitlint on PR range or last push commit |
 | [`.github/workflows/pr.yml`](./.github/workflows/pr.yml) | Pushes (not `main`) and `workflow_dispatch` | Install deps, run **`pnpm open-pr`** (`node tools/open-pr.js`) — set **`PR_HEAD_BRANCH`** / **`PR_BASE_BRANCH`** in CI via env (workflow sets them). Use a PAT secret **`PR_BOT_TOKEN`** if branch protection requires it; otherwise document your org’s policy. |
-| [`.github/workflows/release.yml`](./.github/workflows/release.yml) | Push to **`main`** | **`semantic-release`** — version bump, `CHANGELOG.md`, git tag, npm publish (with provenance), GitHub Release |
+| [`.github/workflows/release.yml`](./.github/workflows/release.yml) | Push to **`main`** (including when a PR merges) | **`semantic-release`** — version bump, `CHANGELOG.md`, git tag, npm publish (with provenance), GitHub Release |
 
 Optional **`pnpm open-pr`** locally: set **`GH_TOKEN`** (or **`GITHUB_TOKEN`**) and branch overrides **`PR_BASE_BRANCH`** / **`PR_HEAD_BRANCH`** as needed.
 
 ## Publishing (maintainers)
 
-Releases are automated with **[semantic-release](https://github.com/semantic-release/semantic-release)** on every push to **`main`** (see [`.releaserc.json`](./.releaserc.json) and [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs)). Configure repository secrets:
+Releases are automated with **[semantic-release](https://github.com/semantic-release/semantic-release)** on every push to **`main`** (see [`.releaserc.json`](./.releaserc.json) and [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs)).
 
-- **`NPM_TOKEN`** — npm automation token with publish scope (used by `@semantic-release/npm`).
-- **`GITHUB_TOKEN`** is provided by Actions for the GitHub Release step.
+### Secrets and registry
+
+- **`NPM_TOKEN`** (repository or organization secret) — npm **automation** or granular token with **publish** rights for `@verndale/commit-ai`. The Release workflow sets both `NPM_TOKEN` and `NODE_AUTH_TOKEN` from it.
+- **`GITHUB_TOKEN`** — provided by Actions for API calls (GitHub Release, etc.). The checkout and git plugin use **`SEMANTIC_RELEASE_TOKEN`** when set; otherwise they use `GITHUB_TOKEN` (see below).
+
+**npm provenance:** [`.releaserc.json`](./.releaserc.json) sets `"provenance": true` on `@semantic-release/npm`, which matches **npm Trusted Publishing** from this GitHub repository. On [npmjs.com](https://www.npmjs.com/), enable **Trusted Publishing** for this package linked to **`verndale/commit-ai`** (or your fork’s repo if you test there). If publish fails until that is configured, either finish Trusted Publishing setup or temporarily set `"provenance": false` in `.releaserc.json` (you lose the provenance badge).
+
+### Branch protection and release commits
+
+semantic-release pushes a **release commit** and **tag** back to `main` via `@semantic-release/git`. If **`main`** is protected and the default token cannot push, either allow **GitHub Actions** to bypass protection for this repository, or add a personal access token (classic: `repo`, or fine-grained: **Contents** read/write on this repo) as **`SEMANTIC_RELEASE_TOKEN`**. The Release workflow passes `SEMANTIC_RELEASE_TOKEN || GITHUB_TOKEN` to checkout and to semantic-release as `GITHUB_TOKEN`.
+
+### Commits that produce releases
+
+**Conventional Commits** on `main` drive `@semantic-release/commit-analyzer` (patch / minor / major). For **squash merge**, the merged commit message is usually the **PR title**, so the title must satisfy the same rules as a commit header (for example `feat(scope): Subject`). PR checks lint the PR title and the commits on the branch.
 
 Tag-only npm publish was removed in favor of this flow to avoid double publishes. To try a release locally: `pnpm release` (requires appropriate tokens and git state; use a fork or `--dry-run` as appropriate).
 
