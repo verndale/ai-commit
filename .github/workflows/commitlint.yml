@@ -11,6 +11,9 @@ on:
 jobs:
   commitlint:
     runs-on: ubuntu-latest
+    # Avoid back-to-back runs when a push triggers synchronize and automation edits the PR body
+    # (edited). Still run on edited when the title changes (squash commit message on main).
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action != 'edited' || github.event.changes.title))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
