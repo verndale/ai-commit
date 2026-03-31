@@ -1,6 +1,6 @@
 {
   "name": "@verndale/commit-ai",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "AI-assisted conventional commits with bundled commitlint — one install, aligned rules",
   "license": "MIT",
   "author": "Verndale",
@@ -39,6 +39,8 @@
     "access": "public"
   },
   "scripts": {
+    "prepare": "husky",
+    "commit": "node ./bin/cli.js run",
     "lint:commit": "commitlint --edit .git/COMMIT_EDITMSG --config lib/commitlint-preset.cjs",
     "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs');\""
   },
@@ -50,5 +52,8 @@
     "@commitlint/parse": "^20.5.0",
     "dotenv": "^16.4.7",
     "openai": "^6.33.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

@@ -23,7 +23,7 @@ function commitlintCliPath() {
 }
 
 function printHelp() {
-  process.stdout.write(`commit-ai — conventional commits + bundled commitlint
+  process.stdout.write(`commit-ai — conventional commits + bundled commitlint (mandatory deterministic scope; see README).
 
 Usage:
   commit-ai run
@@ -59,7 +59,7 @@ function stripGitComments(text) {
 async function cmdRun() {
   assertInGitRepo();
   if (!hasStagedChanges()) {
-    process.stderr.write("No staged changes. Stage files with git add first.\n");
+    process.stderr.write("No staged changes. Stage files before running commit-ai (e.g. pnpm commit).\n");
     process.exit(1);
   }
   const { message, warnings } = await generateAndValidate(process.cwd(), {

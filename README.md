@@ -18,6 +18,18 @@ pnpm add -D @verndale/commit-ai
 - **`OPENAI_API_KEY`** — Required for `commit-ai run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
 - The CLI loads **`.env`** from the current working directory (project root).
 
+## Commit policy (v2)
+
+- **Mandatory scope** — Every header is `type(scope): Subject` (or `type(scope)!:` when breaking). The **scope is not chosen by the model**; it is derived from staged paths (see [`lib/core/message-policy.js`](lib/core/message-policy.js)) and falls back to a short name from `package.json` (e.g. `commit-ai`).
+- **Types** — `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`.
+- **Subject** — Imperative, Beams-style (first word capitalized), max **50** characters, no trailing period.
+- **Body / footer** — Wrap lines at **72** characters when present.
+- **Issues** — If branch or diff mentions `#123`, footers may add `Refs #n` / `Closes #n` (no invented numbers).
+- **Breaking changes** — Only when policy detects governance-related files (commitlint, Husky, this package’s rules/preset); otherwise `!` and `BREAKING CHANGE:` lines are stripped.
+- **Staged diff for AI** — Lockfile and common binary globs are **excluded** from the diff text sent to the model (see [`lib/core/git.js`](lib/core/git.js)); path detection still uses the full staged file list.
+
+**Semver:** v2 tightens commitlint (mandatory scope, stricter lengths). If you `extends` this preset, review [lib/rules.js](lib/rules.js) and adjust overrides as needed.
+
 ## Commands
 
 | Command | Purpose |
@@ -87,6 +99,8 @@ const rules = require("@verndale/commit-ai/rules");
 corepack enable
 pnpm install
 ```
+
+Copy `.env.example` to `.env` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs this repo’s CLI (`node ./bin/cli.js run`; the published package exposes `commit-ai` in `node_modules/.bin` for dependents). Hooks under `.husky/` call **`pnpm exec commit-ai`** from this checkout.
 
 ## Publishing (maintainers)
 
