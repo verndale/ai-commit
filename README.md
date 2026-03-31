@@ -130,7 +130,11 @@ semantic-release pushes a **release commit** and **tag** back to `main` via `@se
 
 ### Commits that produce releases
 
-**Conventional Commits** on `main` drive `@semantic-release/commit-analyzer` (patch / minor / major). For **squash merge**, the merged commit message is usually the **PR title**, so the title must satisfy the same rules as a commit header (for example `feat(scope): Subject`). PR checks lint the PR title and the commits on the branch.
+**Conventional Commits** on `main` drive `@semantic-release/commit-analyzer` (patch / minor / major). The analyzer uses the **first line** of each commit since the last tag; long PR bodies do not substitute for a releasable header.
+
+With the default plugin configuration in [`.releaserc.json`](./.releaserc.json) (no custom `releaseRules`), commits whose type is only **`chore`**, **`docs`**, **`ci`**, **`style`**, **`test`**, **`build`**, etc. **do not** trigger a version bump, `CHANGELOG.md` update, or tag. To ship semver for user-facing work, use a squash **PR title** (or merge commit message) with a releasable type—typically **`feat`**, **`fix`**, **`perf`**, or **`revert`**, or a **breaking** change (`!` / `BREAKING CHANGE:`). For **squash merge**, the merged commit message is usually the **PR title**, so match commitlint there. PR checks lint the PR title and the commits on the branch.
+
+If the project ever needs patch releases from `chore`/`docs`-only merges, maintainers can add **`releaseRules`** to `@semantic-release/commit-analyzer` in `.releaserc.json`; the default is to skip those types so releases stay signal-heavy.
 
 Tag-only npm publish was removed in favor of this flow to avoid double publishes. To try a release locally: `pnpm release` (requires appropriate tokens and git state; use a fork or `--dry-run` as appropriate).
 
