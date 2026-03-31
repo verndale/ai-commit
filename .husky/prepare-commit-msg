@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# See README (Husky): same as `pnpm exec commit-ai prepare-commit-msg` when PATH has pnpm.
+node "$(dirname "$0")/../bin/cli.js" prepare-commit-msg "$1" "$2"
