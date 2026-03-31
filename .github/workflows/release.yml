@@ -48,6 +48,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Bundled npm can omit readme on per-version registry JSON; npmjs Readme tab then shows a false
+      # “no README” while README.md is in the tarball. Latest publish CLI improves metadata consistency.
+      - name: Use latest npm for publish
+        run: npm install -g npm@latest
+
       - name: Run semantic-release
         env:
           HUSKY: "0"
