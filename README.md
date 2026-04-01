@@ -18,13 +18,13 @@ The same package works with **npm** or **yarn** (for example `npm install -D @ve
 ## Quick setup (deterministic order)
 
 1. **Install** the dev dependency (see [Install](#install)).
-2. **Init** — From the **git repo root** (where **`package.json`** lives), run **`pnpm exec ai-commit init`**. That merges **`.env`** / **`.env.example`** (see [`.env.example`](.env.example) for keys and comments), runs **`npx husky@9 init`** if Husky is not present, adds missing **`commit`** / **`prepare`** / **`husky`** entries to **`package.json`** when the file exists, and writes **`.husky`** hooks. **Install dependencies** afterward if **`package.json`** changed (`pnpm install`, `npm install`, etc.).  
+2. **Init** — From the **git repo root** (where **`package.json`** lives), run **`pnpm exec ai-commit init`**. That merges **`.env`** and **`.env.example`** (creates **`.env.example`** from the bundled template if it is missing; see [`.env.example`](.env.example) for keys and comments), runs **`npx husky@9 init`** if Husky is not present, adds missing **`commit`** / **`prepare`** / **`husky`** entries to **`package.json`** when the file exists, and writes **`.husky`** hooks. **Install dependencies** afterward if **`package.json`** changed (`pnpm install`, `npm install`, etc.).  
    - Not in a git repo? **init** only updates env files and explains that Git/Husky were skipped.  
    - Env files only? Use **`pnpm exec ai-commit init --env-only`**.  
    - Hooks only (no **`package.json`** changes)? Use **`pnpm exec ai-commit init --husky`**.
 3. **Secrets** — Set **`OPENAI_API_KEY`** in `.env` and/or `.env.local` (`.env.local` overrides `.env` for duplicate keys).
 
-Use **`ai-commit init --force`** to replace **`.env`** with the bundled template (destructive) or to overwrite existing Husky hook files. **`init` does not** fully replace a committed **`.env.example`**; it only appends missing ai-commit keys there.
+Use **`ai-commit init --force`** to replace **`.env`** and **`.env.example`** with the bundled template (destructive) or to overwrite existing Husky hook files. Without **`--force`**, **init** creates **`.env.example`** when missing and otherwise appends missing ai-commit keys (same as **`.env`**).
 
 ## Environment
 

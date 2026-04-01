@@ -115,22 +115,25 @@ function cmdInit(argv) {
   }
 
   const envExampleDest = path.join(cwd, ".env.example");
-  if (fs.existsSync(envExampleDest)) {
-    const exResult = mergeAiCommitEnvFile(envExampleDest, examplePath, { force: false });
-    const exRel = path.relative(cwd, envExampleDest) || ".env.example";
-    switch (exResult.kind) {
-      case "wrote":
-        process.stdout.write(`Wrote ${exRel} from bundled template.\n`);
-        break;
-      case "merged":
-        process.stdout.write(`Appended missing @verndale/ai-commit keys to ${exRel}.\n`);
-        break;
-      case "unchanged":
-        process.stdout.write(`No missing @verndale/ai-commit keys in ${exRel}; left unchanged.\n`);
-        break;
-      default:
-        break;
-    }
+  const exResult = mergeAiCommitEnvFile(envExampleDest, examplePath, { force });
+  const exRel = path.relative(cwd, envExampleDest) || ".env.example";
+  switch (exResult.kind) {
+    case "replaced":
+      process.stdout.write(`Replaced ${exRel} with bundled template (--force).\n`);
+      break;
+    case "wrote":
+      process.stdout.write(`Wrote ${exRel} from bundled template.\n`);
+      break;
+    case "merged":
+      process.stdout.write(`Appended missing @verndale/ai-commit keys to ${exRel}.\n`);
+      break;
+    case "unchanged":
+      process.stdout.write(
+        `No missing @verndale/ai-commit keys in ${exRel}; left unchanged. Use --force to replace the file with the bundled template.\n`,
+      );
+      break;
+    default:
+      break;
   }
 
   if (envOnly) {
