@@ -23,12 +23,12 @@ function commitlintCliPath() {
 }
 
 function printHelp() {
-  process.stdout.write(`commit-ai — conventional commits + bundled commitlint (mandatory deterministic scope; see README).
+  process.stdout.write(`ai-commit — conventional commits + bundled commitlint (mandatory deterministic scope; see README).
 
 Usage:
-  commit-ai run
-  commit-ai prepare-commit-msg <file> [source]
-  commit-ai lint --edit <file>
+  ai-commit run
+  ai-commit prepare-commit-msg <file> [source]
+  ai-commit lint --edit <file>
 
 Commands:
   run                  Generate a message from the staged diff and run git commit.
@@ -46,7 +46,7 @@ Loads \`.env\` then \`.env.local\` from the current working directory (\`.env.lo
 function parseLintArgv(argv) {
   const i = argv.indexOf("--edit");
   if (i === -1 || !argv[i + 1]) {
-    throw new Error("Missing --edit <file> (example: commit-ai lint --edit \"$1\")");
+    throw new Error("Missing --edit <file> (example: ai-commit lint --edit \"$1\")");
   }
   return { file: argv[i + 1] };
 }
@@ -61,7 +61,7 @@ function stripGitComments(text) {
 async function cmdRun() {
   assertInGitRepo();
   if (!hasStagedChanges()) {
-    process.stderr.write("No staged changes. Stage files before running commit-ai (e.g. pnpm commit).\n");
+    process.stderr.write("No staged changes. Stage files before running ai-commit (e.g. pnpm commit).\n");
     process.exit(1);
   }
   const { message, warnings } = await generateAndValidate(process.cwd(), {
@@ -128,7 +128,7 @@ async function main() {
     const file = argv[1];
     const source = argv[2];
     if (!file) {
-      throw new Error("Usage: commit-ai prepare-commit-msg <file> [source]");
+      throw new Error("Usage: ai-commit prepare-commit-msg <file> [source]");
     }
     await cmdPrepareCommitMsg(file, source);
     return;

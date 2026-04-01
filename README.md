@@ -1,4 +1,4 @@
-# @verndale/commit-ai
+# @verndale/ai-commit
 
 AI-assisted [Conventional Commits](https://www.conventionalcommits.org/) with **bundled [commitlint](https://commitlint.js.org/)** so generated messages match the same rules enforced in hooks.
 
@@ -10,18 +10,18 @@ AI-assisted [Conventional Commits](https://www.conventionalcommits.org/) with **
 ## Install
 
 ```bash
-pnpm add -D @verndale/commit-ai
+pnpm add -D @verndale/ai-commit
 ```
 
 ## Environment
 
-- **`OPENAI_API_KEY`** — Required for `commit-ai run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
+- **`OPENAI_API_KEY`** — Required for `ai-commit run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
 - The CLI loads **`.env`** then **`.env.local`** from the current working directory (project root); values in `.env.local` override `.env` for the same key.
 - **Optional tooling** (see [`.env.example`](./.env.example)): `PR_*` for [`tools/open-pr.js`](./tools/open-pr.js) / the **Create or update PR** workflow; `RELEASE_NOTES_AI_*` for the semantic-release notes plugin. Use a GitHub PAT as **`GH_TOKEN`** (or `GITHUB_TOKEN`) when calling the GitHub API outside Actions.
 
 ## Commit policy (v2)
 
-- **Mandatory scope** — Every header is `type(scope): Subject` (or `type(scope)!:` when breaking). The **scope is not chosen by the model**; it is derived from staged paths (see [`lib/core/message-policy.js`](lib/core/message-policy.js)) and falls back to a short name from `package.json` (e.g. `commit-ai`).
+- **Mandatory scope** — Every header is `type(scope): Subject` (or `type(scope)!:` when breaking). The **scope is not chosen by the model**; it is derived from staged paths (see [`lib/core/message-policy.js`](lib/core/message-policy.js)) and falls back to a short name from `package.json` (e.g. `ai-commit`).
 - **Types** — `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`.
 - **Subject** — Imperative, Beams-style (first word capitalized), max **50** characters, no trailing period.
 - **Body / footer** — Wrap lines at **72** characters when present.
@@ -35,16 +35,16 @@ pnpm add -D @verndale/commit-ai
 
 | Command | Purpose |
 | --- | --- |
-| `commit-ai run` | Generate a message from the staged diff and run `git commit`. |
-| `commit-ai prepare-commit-msg <file> [source]` | Git `prepare-commit-msg` hook: fill an empty message; skips `merge` / `squash`. |
-| `commit-ai lint --edit <file>` | Git `commit-msg` hook: run commitlint with this package’s default config. |
+| `ai-commit run` | Generate a message from the staged diff and run `git commit`. |
+| `ai-commit prepare-commit-msg <file> [source]` | Git `prepare-commit-msg` hook: fill an empty message; skips `merge` / `squash`. |
+| `ai-commit lint --edit <file>` | Git `commit-msg` hook: run commitlint with this package’s default config. |
 
 ## package.json scripts (example)
 
 ```json
 {
   "scripts": {
-    "commit": "commit-ai run"
+    "commit": "ai-commit run"
   }
 }
 ```
@@ -59,7 +59,7 @@ Install Husky in your project (`husky` + `"prepare": "husky"` in `package.json` 
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm exec commit-ai prepare-commit-msg "$1" "$2"
+pnpm exec ai-commit prepare-commit-msg "$1" "$2"
 ```
 
 **`.husky/commit-msg`**
@@ -68,20 +68,20 @@ pnpm exec commit-ai prepare-commit-msg "$1" "$2"
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm exec commit-ai lint --edit "$1"
+pnpm exec ai-commit lint --edit "$1"
 ```
 
 Use `npx` or `yarn` instead if that matches your toolchain.
 
 ## commitlint without a second install
 
-Use the packaged binary from hooks (`commit-ai lint --edit`) as above.
+Use the packaged binary from hooks (`ai-commit lint --edit`) as above.
 
 To **extend** the default rules in your own `commitlint.config.js`, you can start from the same preset:
 
 ```js
 module.exports = {
-  extends: ["@verndale/commit-ai"],
+  extends: ["@verndale/ai-commit"],
   rules: {
     // optional overrides
   },
@@ -91,7 +91,7 @@ module.exports = {
 Programmatic access to shared constants (types, line limits) is available via:
 
 ```js
-const rules = require("@verndale/commit-ai/rules");
+const rules = require("@verndale/ai-commit/rules");
 ```
 
 ## Development (this repository)
@@ -101,7 +101,7 @@ corepack enable
 pnpm install
 ```
 
-Copy `.env.example` to `.env` and/or `.env.local` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs this repo’s CLI (`node ./bin/cli.js run`; the published package exposes `commit-ai` in `node_modules/.bin` for dependents). Hooks under `.husky/` call **`pnpm exec commit-ai`** from this checkout.
+Copy `.env.example` to `.env` and/or `.env.local` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs this repo’s CLI (`node ./bin/cli.js run`; the published package exposes `ai-commit` in `node_modules/.bin` for dependents). Hooks under `.husky/` call **`pnpm exec ai-commit`** from this checkout.
 
 ### Repository automation
 
@@ -122,11 +122,11 @@ Releases are automated with **[semantic-release](https://github.com/semantic-rel
 - **`NPM_TOKEN`** (repository or organization secret) — must be able to **`npm publish`** this package in CI **without** an interactive one-time password. The Release workflow sets both `NPM_TOKEN` and `NODE_AUTH_TOKEN` from it.
   - **If the job fails with `EOTP` / “This operation requires a one-time password”:** the account has **2FA** that applies to publishes, and the token is not allowed to bypass OTP in CI. Fix it in one of these ways:
     - **Classic token:** npmjs.com → **Access Tokens** → **Generate New Token** (classic) → type **Automation** (not “Publish”). Store it as **`NPM_TOKEN`**. Automation tokens are for CI and skip OTP on publish.
-    - **Granular token:** **New Granular Access Token** → turn on **Bypass two-factor authentication (2FA)**. Under **Packages and scopes**, set permissions to **Read and write** for **`@verndale/commit-ai`** (not “No access”). Leave **Allowed IP ranges** empty unless your org requires it—GitHub Actions egress IPs are not a single fixed range. Copy the token into **`NPM_TOKEN`**.
+    - **Granular token:** **New Granular Access Token** → turn on **Bypass two-factor authentication (2FA)**. Under **Packages and scopes**, set permissions to **Read and write** for **`@verndale/ai-commit`** (not “No access”). Leave **Allowed IP ranges** empty unless your org requires it—GitHub Actions egress IPs are not a single fixed range. Copy the token into **`NPM_TOKEN`**.
   - Alternatively, finish **[Trusted Publishing](https://docs.npmjs.com/trusted-publishers)** for this repo and package so OIDC can authorize publishes; you may still need a compatible token or npm-side setup until that path is fully enabled—see npm’s docs for your account type.
 - **`GITHUB_TOKEN`** — provided by Actions for API calls (GitHub Release, etc.). The checkout and git plugin use **`SEMANTIC_RELEASE_TOKEN`** when set; otherwise they use `GITHUB_TOKEN` (see below).
 
-**npm provenance:** [`.releaserc.json`](./.releaserc.json) sets `"provenance": true` on `@semantic-release/npm`, which matches **npm Trusted Publishing** from this GitHub repository. On [npmjs.com](https://www.npmjs.com/), enable **Trusted Publishing** for this package linked to **`verndale/commit-ai`** (or your fork’s repo if you test there). If publish fails until that is configured, either finish Trusted Publishing setup or temporarily set `"provenance": false` in `.releaserc.json` (you lose the provenance badge).
+**npm provenance:** [`.releaserc.json`](./.releaserc.json) sets `"provenance": true` on `@semantic-release/npm`, which matches **npm Trusted Publishing** from this GitHub repository. On [npmjs.com](https://www.npmjs.com/), enable **Trusted Publishing** for this package linked to **`verndale/ai-commit`** (or your fork’s repo if you test there). If publish fails until that is configured, either finish Trusted Publishing setup or temporarily set `"provenance": false` in `.releaserc.json` (you lose the provenance badge).
 
 ### Branch protection and release commits
 
