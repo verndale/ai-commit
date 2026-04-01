@@ -1,3 +1,18 @@
+# v2.0.0 — 2026-04-01
+
+## Highlights
+- commit: feat!(ai-commit): Rename npm package and CLI (47ab3b0)
+
+## Breaking changes
+- Package is @verndale/ai-commit; CLI is ai-commit.
+
+## Changes by type
+### Other (unknown)
+- commit: feat!(ai-commit): Rename npm package and CLI (47ab3b0)
+
+## Full commit list
+- 47ab3b0 commit: feat!(ai-commit): Rename npm package and CLI
+
 # v1.3.0 — 2026-03-31
 
 ## Highlights
