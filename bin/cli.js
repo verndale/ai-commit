@@ -14,6 +14,18 @@ const {
   commitFromFile,
 } = require("../lib/core/git.js");
 
+const PREPARE_COMMIT_MSG_HOOK = `#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm exec ai-commit prepare-commit-msg "$1" "$2"
+`;
+
+const COMMIT_MSG_HOOK = `#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm exec ai-commit lint --edit "$1"
+`;
+
 function presetPath() {
   return path.join(__dirname, "..", "lib", "commitlint-preset.cjs");
 }
@@ -27,11 +39,13 @@ function printHelp() {
 
 Usage:
   ai-commit run
+  ai-commit init [--force] [--husky]
   ai-commit prepare-commit-msg <file> [source]
   ai-commit lint --edit <file>
 
 Commands:
   run                  Generate a message from the staged diff and run git commit.
+  init                 Copy bundled \`.env.example\` to \`.env\`; optional \`--husky\` to add Husky hooks.
   prepare-commit-msg   Git hook: fill an empty commit message file (merge/squash skipped).
   lint                 Run commitlint with the package default config (for commit-msg hook).
 
@@ -49,6 +63,75 @@ function parseLintArgv(argv) {
     throw new Error("Missing --edit <file> (example: ai-commit lint --edit \"$1\")");
   }
   return { file: argv[i + 1] };
+}
+
+function parseInitArgv(argv) {
+  let force = false;
+  let husky = false;
+  for (const a of argv) {
+    if (a === "--force") {
+      force = true;
+    } else if (a === "--husky") {
+      husky = true;
+    }
+  }
+  return { force, husky };
+}
+
+function cmdInit(argv) {
+  const { force, husky } = parseInitArgv(argv);
+  const cwd = process.cwd();
+  const examplePath = path.join(__dirname, "..", ".env.example");
+
+  if (!fs.existsSync(examplePath)) {
+    throw new Error("Missing bundled .env.example (corrupt install?).");
+  }
+
+  const envDest = path.join(cwd, ".env");
+  if (fs.existsSync(envDest) && !force) {
+    process.stderr.write("Skipped .env (already exists). Use --force to overwrite.\n");
+  } else {
+    fs.copyFileSync(examplePath, envDest);
+    process.stdout.write(`Wrote ${path.relative(cwd, envDest) || ".env"} from package template.\n`);
+  }
+
+  if (!husky) {
+    return;
+  }
+
+  assertInGitRepo(cwd);
+  const huskyHelper = path.join(cwd, ".husky", "_", "husky.sh");
+  if (!fs.existsSync(huskyHelper)) {
+    process.stderr.write(
+      "Husky is not initialized. Run `pnpm exec husky init` (or `npx husky init`) in this repo, then run `ai-commit init --husky` again.\n",
+    );
+    process.exit(1);
+  }
+
+  const huskyDir = path.join(cwd, ".husky");
+  if (!fs.existsSync(huskyDir)) {
+    fs.mkdirSync(huskyDir, { recursive: true });
+  }
+
+  const preparePath = path.join(huskyDir, "prepare-commit-msg");
+  const commitMsgPath = path.join(huskyDir, "commit-msg");
+
+  for (const [hookPath, body] of [
+    [preparePath, PREPARE_COMMIT_MSG_HOOK],
+    [commitMsgPath, COMMIT_MSG_HOOK],
+  ]) {
+    if (fs.existsSync(hookPath) && !force) {
+      process.stderr.write(`Skipped ${path.relative(cwd, hookPath)} (already exists). Use --force to overwrite.\n`);
+    } else {
+      fs.writeFileSync(hookPath, body, { encoding: "utf8" });
+      try {
+        fs.chmodSync(hookPath, 0o755);
+      } catch {
+        // ignore on platforms that do not support chmod
+      }
+      process.stdout.write(`Wrote ${path.relative(cwd, hookPath)}.\n`);
+    }
+  }
 }
 
 function stripGitComments(text) {
@@ -122,6 +205,10 @@ async function main() {
   }
   if (cmd === "run") {
     await cmdRun();
+    return;
+  }
+  if (cmd === "init") {
+    cmdInit(argv.slice(1));
     return;
   }
   if (cmd === "prepare-commit-msg") {

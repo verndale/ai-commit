@@ -13,6 +13,20 @@ AI-assisted [Conventional Commits](https://www.conventionalcommits.org/) with **
 pnpm add -D @verndale/ai-commit
 ```
 
+The same package works with **npm** or **yarn** (for example `npm install -D @verndale/ai-commit`); use your package manager’s `exec` / `npx` equivalent where the docs show `pnpm exec`.
+
+## Quick setup (deterministic order)
+
+1. **Install** the dev dependency (see [Install](#install)).
+2. **Env template** — Either run **`pnpm exec ai-commit init`** (writes `.env` from the bundled template), or copy the file yourself:  
+   `cp node_modules/@verndale/ai-commit/.env.example .env`  
+   (Shipped template lists only **`OPENAI_API_KEY`** and optional **`COMMIT_AI_MODEL`** — see [`.env.example`](.env.example).)
+3. **Secrets** — Set **`OPENAI_API_KEY`** in `.env` and/or `.env.local` (`.env.local` overrides `.env` for duplicate keys).
+4. **Script** — Add a `commit` script (see [package.json scripts](#packagejson-scripts-example)).
+5. **Husky** — Install [Husky](https://typicode.github.io/husky/) in the repo (`husky` + `"prepare": "husky"` in `package.json` if needed), run **`pnpm exec husky init`**, then either run **`pnpm exec ai-commit init --husky`** or add the hook files manually ([Husky (manual setup)](#husky-manual-setup)).
+
+Use **`ai-commit init --force`** to overwrite an existing `.env` or hook files.
+
 ## Environment
 
 - **`OPENAI_API_KEY`** — Required for `ai-commit run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
@@ -36,6 +50,7 @@ pnpm add -D @verndale/ai-commit
 | Command | Purpose |
 | --- | --- |
 | `ai-commit run` | Generate a message from the staged diff and run `git commit`. |
+| `ai-commit init [--force] [--husky]` | Copy bundled `.env.example` to `.env`; with `--husky`, write Husky hooks (requires `husky init` first). |
 | `ai-commit prepare-commit-msg <file> [source]` | Git `prepare-commit-msg` hook: fill an empty message; skips `merge` / `squash`. |
 | `ai-commit lint --edit <file>` | Git `commit-msg` hook: run commitlint with this package’s default config. |
 
