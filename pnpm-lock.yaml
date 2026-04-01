@@ -45,6 +45,9 @@ importers:
       '@semantic-release/npm':
         specifier: ^13.1.5
         version: 13.1.5(semantic-release@25.0.3(typescript@6.0.2))
+      '@verndale/ai-pr':
+        specifier: ^1.0.0
+        version: 1.0.0
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -288,6 +291,11 @@ packages:
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
+  '@verndale/ai-pr@1.0.0':
+    resolution: {integrity: sha512-s7nFZrxk3GU1ESTEj/FVhyDz3Tto9EGrZ1sqVhoZCePkY8oZKIzsdZe+hVIFJEbcAHpZhj92AvyIy87o951Pgw==}
+    engines: {node: '>=24.14.0'}
+    hasBin: true
+
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
@@ -493,6 +501,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   duplexer2@0.1.4:
@@ -1836,6 +1848,10 @@ snapshots:
 
   '@types/normalize-package-data@2.4.4': {}
 
+  '@verndale/ai-pr@1.0.0':
+    dependencies:
+      dotenv: 17.3.1
+
   agent-base@7.1.4: {}
 
   aggregate-error@3.1.0:
@@ -2035,6 +2051,8 @@ snapshots:
       is-obj: 2.0.0
 
   dotenv@16.6.1: {}
+
+  dotenv@17.3.1: {}
 
   duplexer2@0.1.4:
     dependencies:

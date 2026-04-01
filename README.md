@@ -17,7 +17,7 @@ pnpm add -D @verndale/ai-commit
 
 - **`OPENAI_API_KEY`** — Required for `ai-commit run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
 - The CLI loads **`.env`** then **`.env.local`** from the current working directory (project root); values in `.env.local` override `.env` for the same key.
-- **Optional tooling:** `PR_*` env vars for [`tools/open-pr.js`](./tools/open-pr.js) / the **Create or update PR** workflow; `RELEASE_NOTES_AI_*` for [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs). Use a GitHub PAT as **`GH_TOKEN`** (or `GITHUB_TOKEN`) when calling the GitHub API outside Actions.
+- **Optional tooling:** `PR_*` env vars for [`@verndale/ai-pr`](https://www.npmjs.com/package/@verndale/ai-pr) (`pnpm open-pr` in this repo) / the **Create or update PR** workflow; `RELEASE_NOTES_AI_*` for [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs). Use a GitHub PAT as **`GH_TOKEN`** (or `GITHUB_TOKEN`) when calling the GitHub API outside Actions.
 
 ## Commit policy (v2)
 
@@ -108,7 +108,7 @@ Copy `.env.example` to `.env` and/or `.env.local` and set **`OPENAI_API_KEY`**. 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
 | [`.github/workflows/commitlint.yml`](./.github/workflows/commitlint.yml) | PRs to `main`, pushes to non-`main` branches | Commitlint on PR range or last push commit |
-| [`.github/workflows/pr.yml`](./.github/workflows/pr.yml) | Pushes (not `main`) and `workflow_dispatch` | Install deps, run **`pnpm open-pr`** (`node tools/open-pr.js`) — set **`PR_HEAD_BRANCH`** / **`PR_BASE_BRANCH`** in CI via env (workflow sets them). Use a PAT secret **`PR_BOT_TOKEN`** if branch protection requires it; otherwise document your org’s policy. |
+| [`.github/workflows/pr.yml`](./.github/workflows/pr.yml) | Pushes (not `main`) and `workflow_dispatch` | Install deps, run **`pnpm open-pr`** ([**`@verndale/ai-pr`**](https://www.npmjs.com/package/@verndale/ai-pr)) — set **`PR_HEAD_BRANCH`** / **`PR_BASE_BRANCH`** in CI via env (workflow sets them). Use a PAT secret **`PR_BOT_TOKEN`** if branch protection requires it; otherwise document your org’s policy. |
 | [`.github/workflows/release.yml`](./.github/workflows/release.yml) | Push to **`main`** (including when a PR merges) | **`semantic-release`** — version bump, `CHANGELOG.md`, git tag, npm publish (with provenance), GitHub Release |
 
 Optional **`pnpm open-pr`** locally: set **`GH_TOKEN`** (or **`GITHUB_TOKEN`**) and branch overrides **`PR_BASE_BRANCH`** / **`PR_HEAD_BRANCH`** as needed.
