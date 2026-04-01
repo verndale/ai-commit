@@ -28,6 +28,7 @@
   "files": [
     "bin",
     "lib",
+    ".env.example",
     "README.md",
     "LICENSE"
   ],
@@ -44,7 +45,7 @@
     "lint:commit": "commitlint --edit .git/COMMIT_EDITMSG --config lib/commitlint-preset.cjs",
     "open-pr": "ai-pr",
     "release": "semantic-release",
-    "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs');\""
+    "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs'); require('./lib/init-env.js'); require('./lib/init-workspace.js');\""
   },
   "dependencies": {
     "@commitlint/cli": "^20.5.0",

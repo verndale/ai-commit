@@ -13,9 +13,23 @@ AI-assisted [Conventional Commits](https://www.conventionalcommits.org/) with **
 pnpm add -D @verndale/ai-commit
 ```
 
+The same package works with **npm** or **yarn** (for example `npm install -D @verndale/ai-commit`); use your package manager’s `exec` / `npx` equivalent where the docs show `pnpm exec`.
+
+## Quick setup (deterministic order)
+
+1. **Install** the dev dependency (see [Install](#install)).
+2. **Init** — From the **git repo root** (where **`package.json`** lives), run **`pnpm exec ai-commit init`**. That merges **`.env`** / **`.env.example`** (see [`.env.example`](.env.example) for keys and comments), runs **`npx husky@9 init`** if Husky is not present, adds missing **`commit`** / **`prepare`** / **`husky`** entries to **`package.json`** when the file exists, and writes **`.husky`** hooks. **Install dependencies** afterward if **`package.json`** changed (`pnpm install`, `npm install`, etc.).  
+   - Not in a git repo? **init** only updates env files and explains that Git/Husky were skipped.  
+   - Env files only? Use **`pnpm exec ai-commit init --env-only`**.  
+   - Hooks only (no **`package.json`** changes)? Use **`pnpm exec ai-commit init --husky`**.
+3. **Secrets** — Set **`OPENAI_API_KEY`** in `.env` and/or `.env.local` (`.env.local` overrides `.env` for duplicate keys).
+
+Use **`ai-commit init --force`** to replace **`.env`** with the bundled template (destructive) or to overwrite existing Husky hook files. **`init` does not** fully replace a committed **`.env.example`**; it only appends missing ai-commit keys there.
+
 ## Environment
 
 - **`OPENAI_API_KEY`** — Required for `ai-commit run` (and for AI-filled `prepare-commit-msg` when you want the model). Optional `COMMIT_AI_MODEL` (default `gpt-4o-mini`).
+- **Shared env vars** — If another tool already documents **`OPENAI_API_KEY`** or **`COMMIT_AI_MODEL`**, **`ai-commit init`** adds its own `# @verndale/ai-commit — …` line immediately above the assignment when missing; it does not remove or replace existing comment lines.
 - The CLI loads **`.env`** then **`.env.local`** from the current working directory (project root); values in `.env.local` override `.env` for the same key.
 - **Optional tooling:** `PR_*` env vars for [`@verndale/ai-pr`](https://www.npmjs.com/package/@verndale/ai-pr) (`pnpm open-pr` in this repo) / the **Create or update PR** workflow; `RELEASE_NOTES_AI_*` for [`tools/semantic-release-notes.cjs`](./tools/semantic-release-notes.cjs). Use a GitHub PAT as **`GH_TOKEN`** (or `GITHUB_TOKEN`) when calling the GitHub API outside Actions.
 
@@ -36,6 +50,7 @@ pnpm add -D @verndale/ai-commit
 | Command | Purpose |
 | --- | --- |
 | `ai-commit run` | Generate a message from the staged diff and run `git commit`. |
+| `ai-commit init [--force] [--env-only] [--husky] [--workspace]` | Merge env keys, then **`npx husky@9 init`** if needed, merge **`package.json`** when present, write hooks. **`--env-only`** stops after env files. **`--husky`** skips `package.json` (hooks + Husky only); use **`--husky --workspace`** to include **`package.json`** again. **`--force`** replaces `.env` / overwrites hooks. |
 | `ai-commit prepare-commit-msg <file> [source]` | Git `prepare-commit-msg` hook: fill an empty message; skips `merge` / `squash`. |
 | `ai-commit lint --edit <file>` | Git `commit-msg` hook: run commitlint with this package’s default config. |
 
@@ -51,7 +66,7 @@ pnpm add -D @verndale/ai-commit
 
 ## Husky (manual setup)
 
-Install Husky in your project (`husky` + `"prepare": "husky"` in `package.json` if needed), then add hooks.
+**`pnpm exec ai-commit init`** does this automatically. To add hooks by hand, install Husky (`husky` + `"prepare": "husky"` in `package.json` if needed), then add the snippets below.
 
 **`.husky/prepare-commit-msg`**
 
@@ -71,7 +86,9 @@ pnpm exec ai-commit prepare-commit-msg "$1" "$2"
 pnpm exec ai-commit lint --edit "$1"
 ```
 
-Use `npx` or `yarn` instead if that matches your toolchain.
+Hooks created by **`init`** use **`pnpm exec ai-commit`** when **`pnpm-lock.yaml`** exists, otherwise **`npx --no ai-commit`**. Edit the hook files if you use another runner.
+
+**If Husky is already set up:** **`init`** does not run **`npx husky@9 init`** when **`.husky/_/husky.sh`** already exists. **`package.json`** is only updated for missing **`commit`**, **`prepare`**, or **`devDependencies.husky`** (nothing is replaced). Hook files **`.husky/prepare-commit-msg`** and **`.husky/commit-msg`** are left alone if they already exist; use **`ai-commit init --force`** to overwrite them with the ai-commit snippets.
 
 ## commitlint without a second install
 
