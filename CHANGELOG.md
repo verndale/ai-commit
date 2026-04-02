@@ -1,3 +1,23 @@
+# v2.4.2 — 2026-04-02
+
+## Highlights
+- commit: Merge pull request #16 from verndale/feat/det-install (9471d1a)
+- fix(lib): Update environment configuration files (1c0ec60)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(lib): Update environment configuration files (1c0ec60)
+
+### Other (unknown)
+- commit: Merge pull request #16 from verndale/feat/det-install (9471d1a)
+
+## Full commit list
+- 9471d1a commit: Merge pull request #16 from verndale/feat/det-install
+- 1c0ec60 fix(lib): Update environment configuration files
+
 # v2.4.1 — 2026-04-02
 
 ## Highlights
