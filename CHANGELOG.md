@@ -1,3 +1,23 @@
+# v2.5.0 — 2026-04-02
+
+## Highlights
+- commit: Merge pull request #20 from verndale/feat/det-install (c49b211)
+- feat(ai-commit): Update README with GitHub Actions CI snippet (e89d3ec)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Features
+- feat(ai-commit): Update README with GitHub Actions CI snippet (e89d3ec)
+
+### Other (unknown)
+- commit: Merge pull request #20 from verndale/feat/det-install (c49b211)
+
+## Full commit list
+- c49b211 commit: Merge pull request #20 from verndale/feat/det-install
+- e89d3ec feat(ai-commit): Update README with GitHub Actions CI snippet
+
 # v2.4.4 — 2026-04-02
 
 ## Highlights
