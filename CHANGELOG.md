@@ -1,3 +1,23 @@
+# v2.4.3 — 2026-04-02
+
+## Highlights
+- commit: Merge pull request #17 from verndale/feat/det-install (6b623f4)
+- fix(ai-commit): Clean up example environment configuration (a8954a0)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(ai-commit): Clean up example environment configuration (a8954a0)
+
+### Other (unknown)
+- commit: Merge pull request #17 from verndale/feat/det-install (6b623f4)
+
+## Full commit list
+- 6b623f4 commit: Merge pull request #17 from verndale/feat/det-install
+- a8954a0 fix(ai-commit): Clean up example environment configuration
+
 # v2.4.2 — 2026-04-02
 
 ## Highlights
