@@ -1,3 +1,23 @@
+# v2.5.3 — 2026-04-02
+
+## Highlights
+- commit: Merge pull request #23 from verndale/feat/det-install (6bc5e74)
+- fix(lib): Remove default pre-commit hook to prevent commit b (230923e)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(lib): Remove default pre-commit hook to prevent commit b (230923e)
+
+### Other (unknown)
+- commit: Merge pull request #23 from verndale/feat/det-install (6bc5e74)
+
+## Full commit list
+- 6bc5e74 commit: Merge pull request #23 from verndale/feat/det-install
+- 230923e fix(lib): Remove default pre-commit hook to prevent commit b
+
 # v2.5.2 — 2026-04-02
 
 ## Highlights
