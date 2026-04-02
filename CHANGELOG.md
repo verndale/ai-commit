@@ -1,3 +1,23 @@
+# v2.5.2 — 2026-04-02
+
+## Highlights
+- commit: Merge pull request #22 from verndale/feat/det-install (d24b1bf)
+- fix(cli): Update README and CLI for env file handling (7d6ca96)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(cli): Update README and CLI for env file handling (7d6ca96)
+
+### Other (unknown)
+- commit: Merge pull request #22 from verndale/feat/det-install (d24b1bf)
+
+## Full commit list
+- d24b1bf commit: Merge pull request #22 from verndale/feat/det-install
+- 7d6ca96 fix(cli): Update README and CLI for env file handling
+
 # v2.5.1 — 2026-04-02
 
 ## Highlights
