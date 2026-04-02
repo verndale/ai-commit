@@ -47,7 +47,7 @@ pnpm exec ai-commit init
 | Husky | Runs **`npx husky@9 init`** at the **git root** if **`husky.sh`** is missing under the resolved hooks directory. |
 | Hooks directory | **`core.hooksPath`** relative to the git root when set; otherwise **`<git-root>/.husky`**. Falls back to **`.husky`** at the git root with a warning if the config path is invalid or outside the repo. |
 | `package.json` | Adds missing **`commit`**, **`prepare`**, **`husky`** entries when **`package.json`** exists at the package root. |
-| Hooks | Writes **`prepare-commit-msg`** and **`commit-msg`** in the hooks directory. If package root ≠ git root, each hook **`cd`s** into the package directory before **`pnpm exec ai-commit`** / **`npx`**. |
+| Hooks | Writes **`prepare-commit-msg`** and **`commit-msg`** in the hooks directory. If package root ≠ git root, each hook **`cd`s** into the package directory before **`pnpm exec ai-commit`** / **`npx`**. Removes a **stock** **`.husky/pre-commit`** that is only **`npm`**/**`pnpm`**/**`yarn`** **`test`** (Husky’s **`init`** default) so that hook does not block commits; custom **pre-commit** files are kept. |
 
 If **`package.json`** changed, run **`pnpm install`** (or `npm install`) again.
 
@@ -170,6 +170,8 @@ pnpm exec ai-commit lint --edit "$1"
 ```
 
 Hooks from **`init`** use **`pnpm exec ai-commit`** when **`pnpm-lock.yaml`** exists in the **package root**; otherwise **`npx --no ai-commit`**. In a monorepo, generated hooks **`cd`** from the git root into that package directory first. Edit the files if you use another runner.
+
+**`pre-commit`:** Husky’s **`init`** often adds **`.husky/pre-commit`** with only **`pnpm test`** (or **`npm test`** / **`yarn test`**). That can block **`git commit`** when tests fail. On each **`ai-commit init`**, **`init`** removes **only** that stock one-liner (or the same command behind a minimal **`husky.sh`** wrapper). If you add other lines (e.g. **lint-staged**), the file is left unchanged. Add your own **pre-commit** or rely on **CI** if you still want tests on every commit.
 
 **Already using Husky?** If **`.husky/_/husky.sh`** exists, **`init`** does not run **`npx husky@9 init`**. **`package.json`** is only amended for missing **`commit`**, **`prepare`**, or **`devDependencies.husky`**. Existing **`.husky/prepare-commit-msg`** and **`.husky/commit-msg`** are not overwritten unless you use **`ai-commit init --force`**.
 

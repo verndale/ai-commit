@@ -22,6 +22,7 @@ const {
   detectPackageExec,
   hookScript,
   runHuskyInit,
+  removeHuskyDefaultPreCommitIfPresent,
   mergePackageJsonForAiCommit,
   warnIfPrepareMissingHusky,
 } = require("../lib/init-workspace.js");
@@ -227,6 +228,13 @@ function cmdInit(argv) {
 
   if (!fs.existsSync(huskyDir)) {
     fs.mkdirSync(huskyDir, { recursive: true });
+  }
+
+  for (const abs of removeHuskyDefaultPreCommitIfPresent(gitRoot, huskyDir)) {
+    const rel = path.relative(cwd, abs) || path.basename(abs);
+    process.stdout.write(
+      `Removed Husky default pre-commit (${rel}); add your own .husky/pre-commit or use CI if you want tests on every commit.\n`,
+    );
   }
 
   const execPrefix = detectPackageExec(packageRoot);
