@@ -1,3 +1,18 @@
+# v2.4.1 — 2026-04-02
+
+## Highlights
+- fix(ai-commit): Remove obsolete file from the repository (f784d8d)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(ai-commit): Remove obsolete file from the repository (f784d8d)
+
+## Full commit list
+- f784d8d fix(ai-commit): Remove obsolete file from the repository
+
 # v2.4.0 — 2026-04-02
 
 ## Highlights
