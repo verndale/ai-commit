@@ -1,3 +1,23 @@
+# v2.5.5 — 2026-04-03
+
+## Highlights
+- commit: Merge pull request #25 from verndale/feat/polish (10164d7)
+- fix(ai-commit): Update documentation for contributing guidelines (b0dfa7f)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(ai-commit): Update documentation for contributing guidelines (b0dfa7f)
+
+### Other (unknown)
+- commit: Merge pull request #25 from verndale/feat/polish (10164d7)
+
+## Full commit list
+- 10164d7 commit: Merge pull request #25 from verndale/feat/polish
+- b0dfa7f fix(ai-commit): Update documentation for contributing guidelines
+
 # v2.5.4 — 2026-04-03
 
 ## Highlights
