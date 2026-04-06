@@ -64,7 +64,7 @@ If package root and git root differ, hook scripts **`cd`** into the package root
 
 - Merges ai-commit-related keys into **`.env.local`** if that file exists; otherwise into **`.env`** (creates **`.env`** from the bundled template if missing). If **`.env.local`** exists, **`.env`** is not written for this merge.
 - **`--force`** never wholesale-replaces **`.env.local`** (append / document keys only).
-- Also updates the **example env file** on disk: prefers **`.env.example`**, then **`.env-example`**, else creates **`.env.example`**. If both **`.env.example`** and **`.env-example`** exist, **`.env.example`** is used and a warning is printed.
+- Also updates the **example env file** on disk: prefers **`.env.local.example`** when it exists, then **`.env.example`**, then **`.env-example`**, else creates **`.env.example`**. If **`.env.local.example`** exists alongside **`.env.example`** and/or **`.env-example`**, **`.env.local.example`** is used and a warning is printed. If both **`.env.example`** and **`.env-example`** exist (and there is no **`.env.local.example`**), **`.env.example`** is used and a warning is printed.
 - The **npm package** still ships the hyphenated template as [`.env-example`](.env-example).
 
 **Husky**
@@ -78,8 +78,9 @@ If package root and git root differ, hook scripts **`cd`** into the package root
 
 **Hook files**
 
-- Writes **`prepare-commit-msg`** and **`commit-msg`** in the hooks directory.
+- Writes **`prepare-commit-msg`** and **`commit-msg`** in the hooks directory as **siblings** of **`.husky/_/`** (Git runs these by name from **`core.hooksPath`**, not from inside **`_`**).
 - Removes Husky’s **default** **`.husky/pre-commit`** when it is only `npm` / `pnpm` / `yarn` **`test`** (so commits are not blocked by tests). Custom **pre-commit** files are left alone.
+- Existing **`prepare-commit-msg`** / **`commit-msg`** files are left unchanged unless you run **`ai-commit init --force`**.
 
 ---
 

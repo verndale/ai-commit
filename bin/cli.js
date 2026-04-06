@@ -202,6 +202,9 @@ function cmdInit(argv) {
           ? `husky init failed: ${r.error}\n`
           : `husky init failed (exit ${r.status ?? "unknown"}). Run \`npx husky init\` in this repo, then run ai-commit init again.\n`,
       );
+      process.stderr.write(
+        "Hook files (commit-msg, prepare-commit-msg) were not written.\n",
+      );
       process.exit(1);
     }
     ranHuskyInit = true;
