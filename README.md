@@ -69,8 +69,8 @@ If package root and git root differ, hook scripts **`cd`** into the package root
 
 **Husky**
 
-- If **`.husky/_/husky.sh`** is missing under the resolved hooks directory, runs **`npx husky@9 init`** at the **git root**.
-- Hooks directory: Git’s **`core.hooksPath`** (relative to the git root), or **`<git-root>/.husky`**. Invalid or out-of-repo paths fall back to **`.husky`** at the git root with a warning.
+- If the Husky shim **`.husky/_/h`** is missing (Husky not installed for this layout), runs **`npx husky@9 init`** at the **git root**. That sets **`core.hooksPath`** to **`.husky/_`** and creates the **`h`** runner inside **`.husky/_/`**.
+- Hooks directory: Git’s **`core.hooksPath`** (relative to the git root), or **`<git-root>/.husky`** when unset. Invalid or out-of-repo paths fall back to **`.husky`** at the git root with a warning.
 
 **`package.json` (at package root)**
 
@@ -78,9 +78,10 @@ If package root and git root differ, hook scripts **`cd`** into the package root
 
 **Hook files**
 
-- Writes **`prepare-commit-msg`** and **`commit-msg`** in the hooks directory as **siblings** of **`.husky/_/`** (Git runs these by name from **`core.hooksPath`**, not from inside **`_`**).
+- **Husky 9 (`core.hooksPath = .husky/_`):** Git runs short **entry** scripts under **`.husky/_/`** that only source **`h`**. Husky’s **`h`** then executes the **real** scripts at **`.husky/prepare-commit-msg`** and **`.husky/commit-msg`** (parent folder). Init writes both layers: stubs in **`_/`**, and **`pnpm exec` / `npx`** commands in **`.husky/`** (with optional **`cd`** into the package root in a monorepo).
+- **`core.hooksPath = .husky`:** One file per hook under **`.husky/`** that sources **`_/h`** and runs the same commands (no separate stub layer).
 - Removes Husky’s **default** **`.husky/pre-commit`** when it is only `npm` / `pnpm` / `yarn` **`test`** (so commits are not blocked by tests). Custom **pre-commit** files are left alone.
-- Existing **`prepare-commit-msg`** / **`commit-msg`** files are left unchanged unless you run **`ai-commit init --force`**.
+- Existing hook files are left unchanged unless you run **`ai-commit init --force`**. If a previous init put **`ai-commit`** commands inside **`.husky/_/`** by mistake, init rewrites those entries back to the short stub without **`--force`**.
 
 ---
 
@@ -176,31 +177,31 @@ pnpm exec ai-commit init --force      # overwrite env/hooks per flag rules
 
 ## Husky (manual setup)
 
-**`pnpm exec ai-commit init`** sets up Husky for you. To add hooks manually, install **`husky`** and ensure **`"prepare": "husky"`** in `package.json`, then add:
+**`pnpm exec ai-commit init`** sets up Husky for you. With **Husky 9**, Git only executes files under **`core.hooksPath`** (usually **`.husky/_/`**). Each of those must be a **short stub** that sources **`h`**; Husky then runs the matching script one level up, e.g. **`.husky/prepare-commit-msg`**, where your **`pnpm exec ai-commit …`** (or **`npx`**) commands live.
 
-**`.husky/prepare-commit-msg`**
+**`.husky/_/prepare-commit-msg`** (entry — stub only)
 
 ```sh
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+. "$(dirname -- "$0")/h"
+```
 
+**`.husky/prepare-commit-msg`** (commands Husky runs)
+
+```sh
+#!/usr/bin/env sh
 pnpm exec ai-commit prepare-commit-msg "$1" "$2"
 ```
 
-**`.husky/commit-msg`**
+**`.husky/_/commit-msg`** and **`.husky/commit-msg`** follow the same pattern (stub vs **`pnpm exec ai-commit lint --edit "$1"`**).
 
-```sh
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+If **`core.hooksPath`** is **`.husky`** (not **`.husky/_`**), use a **single** file per hook: source **`. "$(dirname -- "$0")/_/h"`**, then the same **`pnpm exec ai-commit …`** lines **`init`** would generate.
 
-pnpm exec ai-commit lint --edit "$1"
-```
+**Generated hooks** use **`pnpm exec ai-commit`** when **`pnpm-lock.yaml`** exists at the **package root**; otherwise **`npx --no ai-commit`**. In a monorepo, the **`.husky/`** scripts **`cd`** into the package directory first. Edit the scripts if you use another runner.
 
-**Generated hooks** use **`pnpm exec ai-commit`** when **`pnpm-lock.yaml`** exists at the **package root**; otherwise **`npx --no ai-commit`**. In a monorepo, hooks **`cd`** from the git root into the package directory first. Edit the scripts if you use another runner.
+**Default `pre-commit`:** Husky’s **`init`** also writes **`.husky/pre-commit`** with **`pnpm test`** (or **`npm test`** / **`yarn test`**). That file is not always the one Git runs when **`core.hooksPath`** is **`.husky/_`**, but **`ai-commit init`** still removes that stock **`.husky/pre-commit`** when it matches the known template so it does not surprise you later. If you add other lines (e.g. lint-staged), the file is left unchanged.
 
-**Default `pre-commit`:** Husky’s init often adds **`.husky/pre-commit`** with only **`pnpm test`** (or **`npm test`** / **`yarn test`**), which can block **`git commit`**. Each **`ai-commit init`** removes **only** that stock one-liner (or the same command behind a minimal **`husky.sh`** wrapper). If you add other lines (e.g. lint-staged), the file is unchanged.
-
-**Already using Husky?** If **`.husky/_/husky.sh`** exists, **`npx husky@9 init`** is not run again. **`package.json`** is only amended for missing **`commit`**, **`prepare`**, or **`devDependencies.husky`**. Existing **`prepare-commit-msg`** and **`commit-msg`** hooks are not overwritten unless you use **`ai-commit init --force`**.
+**Already using Husky?** If **`.husky/_/h`** exists, **`npx husky@9 init`** is not run again. **`package.json`** is only amended for missing **`commit`**, **`prepare`**, or **`devDependencies.husky`**. Existing **`prepare-commit-msg`** and **`commit-msg`** hooks are not overwritten unless you use **`ai-commit init --force`**.
 
 ---
 

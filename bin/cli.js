@@ -22,7 +22,12 @@ const {
   detectPackageExec,
   detectPackageInstallInfo,
   formatPackageInstallLine,
-  hookScript,
+  userHooksParentDir,
+  huskyGitEntryStub,
+  userHookScript,
+  hookScriptFlatLayout,
+  isHuskyShimPresent,
+  isMisplacedUserHookInUnderscoreDir,
   runHuskyInit,
   removeHuskyDefaultPreCommitIfPresent,
   mergePackageJsonForAiCommit,
@@ -191,10 +196,9 @@ function cmdInit(argv) {
   }
 
   let { dir: huskyDir } = resolveGitHooksDir(gitRoot);
-  const huskyHelper = path.join(huskyDir, "_", "husky.sh");
   let ranHuskyInit = false;
 
-  if (!fs.existsSync(huskyHelper)) {
+  if (!isHuskyShimPresent(huskyDir)) {
     const r = runHuskyInit(gitRoot);
     if (!r.ok) {
       process.stderr.write(
@@ -211,8 +215,12 @@ function cmdInit(argv) {
     process.stdout.write("Ran `npx husky@9 init`.\n");
     huskyDir = resolveGitHooksDir(gitRoot).dir;
   } else {
+    const shimNote =
+      path.basename(path.resolve(huskyDir)) === "_"
+        ? path.join(huskyDir, "h")
+        : path.join(huskyDir, "_", "h");
     process.stdout.write(
-      `Husky already initialized (found ${path.join(huskyDir, "_", "husky.sh")}); skipped \`npx husky@9 init\`.\n`,
+      `Husky already initialized (found ${shimNote}); skipped \`npx husky@9 init\`.\n`,
     );
   }
 
@@ -247,24 +255,47 @@ function cmdInit(argv) {
   }
 
   const execPrefix = detectPackageExec(packageRoot);
-  const preparePath = path.join(huskyDir, "prepare-commit-msg");
-  const commitMsgPath = path.join(huskyDir, "commit-msg");
+  const underscoreLayout = path.basename(path.resolve(huskyDir)) === "_";
+  const userHookDir = userHooksParentDir(huskyDir);
 
-  for (const [hookPath, hookKind] of [
-    [preparePath, "prepare-commit-msg"],
-    [commitMsgPath, "commit-msg"],
-  ]) {
-    const body = hookScript(packageRoot, gitRoot, execPrefix, hookKind);
-    if (fs.existsSync(hookPath) && !force) {
-      process.stderr.write(`Skipped ${path.relative(cwd, hookPath)} (already exists). Use --force to overwrite.\n`);
-    } else {
-      fs.writeFileSync(hookPath, body, { encoding: "utf8" });
-      try {
-        fs.chmodSync(hookPath, 0o755);
-      } catch {
-        // ignore on platforms that do not support chmod
+  if (!fs.existsSync(userHookDir)) {
+    fs.mkdirSync(userHookDir, { recursive: true });
+  }
+
+  function writeExecutableHook(absPath, body) {
+    fs.writeFileSync(absPath, body, { encoding: "utf8" });
+    try {
+      fs.chmodSync(absPath, 0o755);
+    } catch {
+      // ignore on platforms that do not support chmod
+    }
+    process.stdout.write(`Wrote ${path.relative(cwd, absPath)}.\n`);
+  }
+
+  if (underscoreLayout) {
+    for (const hookKind of ["prepare-commit-msg", "commit-msg"]) {
+      const entryPath = path.join(huskyDir, hookKind);
+      const needStub =
+        force || !fs.existsSync(entryPath) || isMisplacedUserHookInUnderscoreDir(entryPath);
+      if (!needStub) {
+        process.stderr.write(
+          `Skipped ${path.relative(cwd, entryPath)} (already exists). Use --force to overwrite.\n`,
+        );
+      } else {
+        writeExecutableHook(entryPath, huskyGitEntryStub());
       }
-      process.stdout.write(`Wrote ${path.relative(cwd, hookPath)}.\n`);
+    }
+  }
+
+  for (const hookKind of ["prepare-commit-msg", "commit-msg"]) {
+    const userPath = path.join(userHookDir, hookKind);
+    const body = underscoreLayout
+      ? userHookScript(packageRoot, gitRoot, execPrefix, hookKind)
+      : hookScriptFlatLayout(packageRoot, gitRoot, huskyDir, execPrefix, hookKind);
+    if (fs.existsSync(userPath) && !force) {
+      process.stderr.write(`Skipped ${path.relative(cwd, userPath)} (already exists). Use --force to overwrite.\n`);
+    } else {
+      writeExecutableHook(userPath, body);
     }
   }
 

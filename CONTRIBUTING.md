@@ -11,7 +11,7 @@ corepack enable
 pnpm install
 ```
 
-Copy **`.env-example`** to `.env` or `.env.local` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs **`node ./bin/cli.js run`**; published installs use the **`ai-commit`** binary under **`node_modules/.bin`**. Local **`.husky`** hooks use **`pnpm exec ai-commit`**.
+Copy **`.env-example`** to `.env` or `.env.local` and set **`OPENAI_API_KEY`**. After staging, **`pnpm commit`** runs **`node ./bin/cli.js run`**; published installs use the **`ai-commit`** binary under **`node_modules/.bin`**. With **Husky 9**, Git runs hooks from **`.husky/_/`** (see **`core.hooksPath`**); those scripts should call **`pnpm exec ai-commit`** (or regenerate with **`pnpm exec ai-commit init --force`**).
 
 ### Repository automation
 
