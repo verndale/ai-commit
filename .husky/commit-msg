@@ -1,3 +1,2 @@
 #!/usr/bin/env sh
-# See README (Husky): same as `pnpm exec ai-commit lint --edit` when PATH has pnpm.
-node "$(dirname "$0")/../bin/cli.js" lint --edit "$1"
+exec node "$(dirname "$0")/../bin/cli.js" lint --edit "$1"
