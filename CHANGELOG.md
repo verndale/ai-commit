@@ -1,3 +1,23 @@
+# v2.6.1 — 2026-04-06
+
+## Highlights
+- commit: Merge pull request #27 from verndale/fix/env-example (188f1b5)
+- fix(lib): Update environment file handling in documentation (c7a3dab)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(lib): Update environment file handling in documentation (c7a3dab)
+
+### Other (unknown)
+- commit: Merge pull request #27 from verndale/fix/env-example (188f1b5)
+
+## Full commit list
+- 188f1b5 commit: Merge pull request #27 from verndale/fix/env-example
+- c7a3dab fix(lib): Update environment file handling in documentation
+
 # v2.6.0 — 2026-04-03
 
 ## Highlights
