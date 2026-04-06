@@ -1,3 +1,23 @@
+# v2.6.2 — 2026-04-06
+
+## Highlights
+- commit: Merge pull request #28 from verndale/fix/env-example (ac84cfb)
+- fix(lib): Update Husky hook scripts for improved execution (03999cf)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(lib): Update Husky hook scripts for improved execution (03999cf)
+
+### Other (unknown)
+- commit: Merge pull request #28 from verndale/fix/env-example (ac84cfb)
+
+## Full commit list
+- ac84cfb commit: Merge pull request #28 from verndale/fix/env-example
+- 03999cf fix(lib): Update Husky hook scripts for improved execution
+
 # v2.6.1 — 2026-04-06
 
 ## Highlights
