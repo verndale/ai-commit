@@ -3,26 +3,20 @@
 require("../lib/load-project-env.js").loadProjectEnv();
 
 const { buildDeterministicReleaseNotes } = require("./lib/conventional-notes.js");
-
-function normalizeOpenAIBaseUrl(endpoint) {
-  const u = new URL(endpoint);
-  let path = u.pathname.replace(/\/$/, "");
-  if (path.endsWith("/responses") || path.endsWith("/chat/completions")) {
-    path = path.replace(/\/[^/]+$/, "");
-    u.pathname = path || "/";
-  }
-  return u.toString().replace(/\/$/, "");
-}
+const { createProvider } = require("../lib/providers/index.js");
 
 async function maybeGenerateAiSummary({ baseNotes, commitRefs, env }) {
   const enabled = (env.RELEASE_NOTES_AI || "").toLowerCase() === "true";
   const endpoint = env.RELEASE_NOTES_AI_ENDPOINT;
   const apiKey = env.RELEASE_NOTES_AI_API_KEY;
   const model = env.RELEASE_NOTES_AI_MODEL || "gpt-4o-mini";
+  const debug = (env.RELEASE_NOTES_AI_DEBUG || "").toLowerCase() === "true";
 
   if (!enabled || !endpoint || !apiKey) return null;
 
-  const system = [
+  const providerName = env.RELEASE_NOTES_AI_PROVIDER || "openai";
+
+  const systemPrompt = [
     "You write release note summaries for enterprise change logs.",
     "You MUST NOT invent changes.",
     "You may ONLY summarize what appears in the provided release notes.",
@@ -31,7 +25,7 @@ async function maybeGenerateAiSummary({ baseNotes, commitRefs, env }) {
     "No headings, no prose paragraphs, bullets only.",
   ].join(" ");
 
-  const user = [
+  const userPrompt = [
     "Allowed commit hashes:",
     commitRefs.join(", "),
     "",
@@ -39,53 +33,23 @@ async function maybeGenerateAiSummary({ baseNotes, commitRefs, env }) {
     baseNotes,
   ].join("\n");
 
-  const baseURL = normalizeOpenAIBaseUrl(endpoint);
-  const url = `${baseURL}/chat/completions`;
-
-  const body = {
-    model,
-    temperature: 0,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  };
-
-  const debug = (env.RELEASE_NOTES_AI_DEBUG || "").toLowerCase() === "true";
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    if (debug) {
-      const errBody = await res.text();
-      console.warn("[release-notes-ai] API non-OK: %s %s", res.status, errBody.slice(0, 300));
-    }
+  let text;
+  try {
+    const provider = createProvider({
+      provider: providerName,
+      apiKey,
+      baseUrl: endpoint,
+      model,
+    });
+    text = await provider.complete({ systemPrompt, userPrompt, temperature: 0 });
+  } catch (e) {
+    if (debug) console.warn("[release-notes-ai] provider error:", e.message);
     return null;
   }
-  const data = await res.json();
 
-  const raw =
-    data.output_text ||
-    data.text ||
-    (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
-    (data.output &&
-      data.output[0] &&
-      data.output[0].content &&
-      data.output[0].content[0] &&
-      data.output[0].content[0].text) ||
-    "";
-  const text = typeof raw === "string" ? raw : "";
+  if (debug) console.warn("[release-notes-ai] response text length: %d", (text || "").length);
 
-  if (debug) console.warn("[release-notes-ai] response text length: %d", text.length);
-
-  const bullets = text
+  const bullets = (text || "")
     .split("\n")
     .map(s => s.trim())
     .filter(Boolean)
