@@ -10,12 +10,27 @@ require("../lib/load-project-env.js").loadProjectEnv();
 const { generateAndValidate } = require("../lib/core/generate.js");
 const {
   assertInGitRepo,
+  isInGitRepo,
+  getGitRoot,
+  resolveGitHooksDir,
   hasStagedChanges,
   commitFromFile,
 } = require("../lib/core/git.js");
 const { getProviderNames, hasApiKey } = require("../lib/providers/index.js");
 const { formatCommitMessage, ok, warn: fmtWarn, fail, info, createSpinner, bold, dim, green } = require("../lib/core/format.js");
 const { interactiveCommit } = require("../lib/core/interactive.js");
+const { mergeAiCommitEnvFile } = require("../lib/init-env.js");
+const { resolveEnvExamplePath, findPackageRoot } = require("../lib/init-paths.js");
+const {
+  detectPackageExec,
+  detectPackageInstallInfo,
+  formatPackageInstallLine,
+  hookScript,
+  runHuskyInit,
+  removeHuskyDefaultPreCommitIfPresent,
+  mergePackageJsonForAiCommit,
+  warnIfPrepareMissingHusky,
+} = require("../lib/init-workspace.js");
 
 function presetPath() {
   return path.join(__dirname, "..", "lib", "commitlint-preset.cjs");
@@ -30,6 +45,7 @@ function printHelp() {
 
 ${bold("Usage:")}
   commit-ai run [options]
+  commit-ai init [--force] [--env-only] [--husky] [--workspace]
   commit-ai prepare-commit-msg <file> [source]
   commit-ai lint --edit <file>
   commit-ai config [--init]
@@ -37,6 +53,7 @@ ${bold("Usage:")}
 
 ${bold("Commands:")}
   ${green("run")}                  Generate a message from the staged diff and run git commit.
+  ${green("init")}                 Merge env, then Husky + package.json + hooks. Use --env-only, --husky, --workspace, --force.
   ${green("prepare-commit-msg")}   Git hook: fill an empty commit message file.
   ${green("lint")}                 Run commitlint with the bundled config (for commit-msg hook).
   ${green("config")}               Show resolved configuration (or --init to create config file).
@@ -79,6 +96,209 @@ function parseLintArgv(argv) {
     throw new Error("Missing --edit <file> (example: ai-commit lint --edit \"$1\")");
   }
   return { file: argv[i + 1] };
+}
+
+function parseInitArgv(argv) {
+  let force = false;
+  let husky = false;
+  let workspace = false;
+  let envOnly = false;
+  for (const a of argv) {
+    if (a === "--force") {
+      force = true;
+    } else if (a === "--husky") {
+      husky = true;
+    } else if (a === "--workspace") {
+      workspace = true;
+    } else if (a === "--env-only") {
+      envOnly = true;
+    }
+  }
+  return { force, husky, workspace, envOnly };
+}
+
+function cmdInit(argv) {
+  const { force, husky, workspace, envOnly } = parseInitArgv(argv);
+  const cwd = process.cwd();
+  /** Full package.json merge: default on, or `--workspace`; off for `--husky` alone (legacy). */
+  const mergePackageJson = !husky || workspace;
+  const bundledExamplePath = path.join(__dirname, "..", ".env-example");
+
+  if (!fs.existsSync(bundledExamplePath)) {
+    throw new Error("Missing bundled .env-example (corrupt install?).");
+  }
+
+  const inGit = isInGitRepo(cwd);
+  const gitRoot = inGit ? getGitRoot(cwd) : null;
+  const packageRoot = findPackageRoot(cwd, gitRoot);
+
+  const envLocalPath = path.join(packageRoot, ".env.local");
+  const envPath = path.join(packageRoot, ".env");
+
+  if (
+    inGit &&
+    gitRoot &&
+    path.resolve(packageRoot) !== path.resolve(gitRoot)
+  ) {
+    process.stdout.write(
+      `Note: env files are updated under ${packageRoot}; Git hooks use the repository root ${gitRoot}.\n`,
+    );
+  }
+
+  /** When `.env.local` exists it is the only env merge target (no `.env` created or updated). */
+  const envMergePath = fs.existsSync(envLocalPath) ? envLocalPath : envPath;
+  const mergeEnvIntoLocal =
+    path.resolve(envMergePath) === path.resolve(envLocalPath);
+  /** Never `--force`-replace `.env.local` with the bundled template (would wipe secrets). */
+  const envForce = force && !mergeEnvIntoLocal;
+  if (force && mergeEnvIntoLocal) {
+    process.stderr.write(
+      "note: --force does not replace .env.local with the bundled template; ai-commit keys are merged (append / docs) only.\n",
+    );
+  }
+  const envResult = mergeAiCommitEnvFile(envMergePath, bundledExamplePath, {
+    force: envForce,
+  });
+  const envRel = path.relative(cwd, envMergePath) || path.basename(envMergePath);
+  switch (envResult.kind) {
+    case "replaced":
+      process.stdout.write(`Replaced ${envRel} with bundled template (--force).\n`);
+      break;
+    case "wrote":
+      process.stdout.write(`Wrote ${envRel} from bundled template.\n`);
+      break;
+    case "merged":
+      process.stdout.write(`Appended missing @verndale/ai-commit keys to ${envRel}.\n`);
+      break;
+    case "unchanged":
+      process.stdout.write(
+        mergeEnvIntoLocal
+          ? `No missing @verndale/ai-commit keys in ${envRel}; left unchanged.\n`
+          : `No missing @verndale/ai-commit keys in ${envRel}; left unchanged. Use --force to replace the file with the bundled template.\n`,
+      );
+      break;
+    default:
+      break;
+  }
+
+  const envExampleDest = resolveEnvExamplePath(packageRoot);
+  const exResult = mergeAiCommitEnvFile(envExampleDest, bundledExamplePath, { force });
+  const exRel = path.relative(cwd, envExampleDest) || path.basename(envExampleDest);
+  switch (exResult.kind) {
+    case "replaced":
+      process.stdout.write(`Replaced ${exRel} with bundled template (--force).\n`);
+      break;
+    case "wrote":
+      process.stdout.write(`Wrote ${exRel} from bundled template.\n`);
+      break;
+    case "merged":
+      process.stdout.write(`Appended missing @verndale/ai-commit keys to ${exRel}.\n`);
+      break;
+    case "unchanged":
+      process.stdout.write(
+        `No missing @verndale/ai-commit keys in ${exRel}; left unchanged. Use --force to replace the file with the bundled template.\n`,
+      );
+      break;
+    default:
+      break;
+  }
+
+  if (envOnly) {
+    return;
+  }
+
+  if (!inGit) {
+    process.stdout.write(
+      "Not a git repository (or git unavailable); skipped Husky and package.json hooks. Run init from your app directory inside a git repo (with package.json there) for full setup.\n",
+    );
+    return;
+  }
+  if (!gitRoot) {
+    process.stderr.write(
+      "warning: could not resolve git repository root; skipped Husky and hooks.\n",
+    );
+    return;
+  }
+
+  let { dir: huskyDir } = resolveGitHooksDir(gitRoot);
+  const huskyHelper = path.join(huskyDir, "_", "husky.sh");
+  let ranHuskyInit = false;
+
+  if (!fs.existsSync(huskyHelper)) {
+    const r = runHuskyInit(gitRoot);
+    if (!r.ok) {
+      process.stderr.write(
+        r.error
+          ? `husky init failed: ${r.error}\n`
+          : `husky init failed (exit ${r.status ?? "unknown"}). Run \`npx husky init\` in this repo, then run ai-commit init again.\n`,
+      );
+      process.exit(1);
+    }
+    ranHuskyInit = true;
+    process.stdout.write("Ran `npx husky@9 init`.\n");
+    huskyDir = resolveGitHooksDir(gitRoot).dir;
+  } else {
+    process.stdout.write(
+      `Husky already initialized (found ${path.join(huskyDir, "_", "husky.sh")}); skipped \`npx husky@9 init\`.\n`,
+    );
+  }
+
+  let packageJsonChanged = false;
+  if (mergePackageJson) {
+    const pkgPath = path.join(packageRoot, "package.json");
+    if (fs.existsSync(pkgPath)) {
+      const { changed } = mergePackageJsonForAiCommit(pkgPath);
+      packageJsonChanged = changed;
+      if (changed) {
+        process.stdout.write(
+          "Updated package.json (commit script, prepare, and/or devDependencies.husky).\n",
+        );
+      }
+      warnIfPrepareMissingHusky(pkgPath);
+    } else {
+      process.stdout.write(
+        "No package.json found walking up to the git root; skipped package.json merge (hooks still written).\n",
+      );
+    }
+  }
+
+  if (!fs.existsSync(huskyDir)) {
+    fs.mkdirSync(huskyDir, { recursive: true });
+  }
+
+  for (const abs of removeHuskyDefaultPreCommitIfPresent(gitRoot, huskyDir)) {
+    const rel = path.relative(cwd, abs) || path.basename(abs);
+    process.stdout.write(
+      `Removed Husky default pre-commit (${rel}); add your own .husky/pre-commit or use CI if you want tests on every commit.\n`,
+    );
+  }
+
+  const execPrefix = detectPackageExec(packageRoot);
+  const preparePath = path.join(huskyDir, "prepare-commit-msg");
+  const commitMsgPath = path.join(huskyDir, "commit-msg");
+
+  for (const [hookPath, hookKind] of [
+    [preparePath, "prepare-commit-msg"],
+    [commitMsgPath, "commit-msg"],
+  ]) {
+    const body = hookScript(packageRoot, gitRoot, execPrefix, hookKind);
+    if (fs.existsSync(hookPath) && !force) {
+      process.stderr.write(`Skipped ${path.relative(cwd, hookPath)} (already exists). Use --force to overwrite.\n`);
+    } else {
+      fs.writeFileSync(hookPath, body, { encoding: "utf8" });
+      try {
+        fs.chmodSync(hookPath, 0o755);
+      } catch {
+        // ignore on platforms that do not support chmod
+      }
+      process.stdout.write(`Wrote ${path.relative(cwd, hookPath)}.\n`);
+    }
+  }
+
+  if (packageJsonChanged || ranHuskyInit) {
+    const installInfo = detectPackageInstallInfo(packageRoot, gitRoot);
+    process.stdout.write(`${formatPackageInstallLine(installInfo, cwd)}\n`);
+  }
 }
 
 function stripGitComments(text) {
@@ -275,6 +495,10 @@ async function main() {
   if (cmd === "run") {
     const flags = parseRunArgs(argv.slice(1));
     await cmdRun(flags);
+    return;
+  }
+  if (cmd === "init") {
+    cmdInit(argv.slice(1));
     return;
   }
   if (cmd === "prepare-commit-msg") {

@@ -1,6 +1,6 @@
 {
   "name": "@verndale/ai-commit",
-  "version": "2.0.0",
+  "version": "2.6.0",
   "description": "AI-assisted conventional commits with bundled commitlint — one install, aligned rules",
   "license": "MIT",
   "author": "Verndale",
@@ -32,6 +32,7 @@
   "files": [
     "bin",
     "lib",
+    ".env-example",
     "README.md",
     "LICENSE"
   ],
@@ -46,9 +47,9 @@
     "prepare": "husky",
     "commit": "node ./bin/cli.js run",
     "lint:commit": "commitlint --edit .git/COMMIT_EDITMSG --config lib/commitlint-preset.cjs",
-    "open-pr": "node tools/open-pr.js",
     "release": "semantic-release",
-    "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs');\""
+    "prepublishOnly": "node -e \"require('./lib/rules.js'); require('./lib/commitlint-preset.cjs'); require('./lib/init-env.js'); require('./lib/init-workspace.js');\"",
+    "pr:create": "ai-pr"
   },
   "dependencies": {
     "@commitlint/cli": "^20.5.0",
@@ -68,6 +69,7 @@
     }
   },
   "devDependencies": {
+    "@verndale/ai-pr": "^1.1.2",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",

@@ -67,4 +67,4 @@ jobs:
           PR_AI_ENDPOINT: ${{ vars.PR_AI_ENDPOINT }}
           PR_AI_MODEL: ${{ vars.PR_AI_MODEL }}
           PR_AI_API_KEY: ${{ secrets.PR_AI_API_KEY }}
-        run: node tools/open-pr.js
+        run: pnpm run pr:create
