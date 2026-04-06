@@ -41,15 +41,15 @@ function commitlintCliPath() {
 }
 
 function printHelp() {
-  process.stdout.write(`${bold("commit-ai")} — AI-assisted conventional commits with bundled commitlint
+  process.stdout.write(`${bold("ai-commit")} — AI-assisted conventional commits with bundled commitlint
 
 ${bold("Usage:")}
-  commit-ai run [options]
-  commit-ai init [--force] [--env-only] [--husky] [--workspace]
-  commit-ai prepare-commit-msg <file> [source]
-  commit-ai lint --edit <file>
-  commit-ai config [--init]
-  commit-ai hooks install
+  ai-commit run [options]
+  ai-commit init [--force] [--env-only] [--husky] [--workspace]
+  ai-commit prepare-commit-msg <file> [source]
+  ai-commit lint --edit <file>
+  ai-commit config [--init]
+  ai-commit hooks install
 
 ${bold("Commands:")}
   ${green("run")}                  Generate a message from the staged diff and run git commit.
@@ -57,7 +57,7 @@ ${bold("Commands:")}
   ${green("prepare-commit-msg")}   Git hook: fill an empty commit message file.
   ${green("lint")}                 Run commitlint with the bundled config (for commit-msg hook).
   ${green("config")}               Show resolved configuration (or --init to create config file).
-  ${green("hooks")}                Install git hooks (commit-ai hooks install).
+  ${green("hooks")}                Install git hooks (ai-commit hooks install).
 
 ${bold("Run Options:")}
   --dry-run            Generate and display the message without committing.
@@ -311,7 +311,7 @@ function stripGitComments(text) {
 async function cmdRun(flags) {
   assertInGitRepo();
   if (!hasStagedChanges()) {
-    fail("No staged changes. Stage files before running commit-ai.");
+    fail("No staged changes. Stage files before running ai-commit.");
     process.exit(1);
   }
 
@@ -399,7 +399,7 @@ function cmdLint(editFile) {
 
 function cmdConfig(argv) {
   if (argv.includes("--init")) {
-    const configPath = path.join(process.cwd(), ".commit-airc.json");
+    const configPath = path.join(process.cwd(), ".ai-commitrc.json");
     if (fs.existsSync(configPath)) {
       info(`Config file already exists: ${configPath}`);
       return;
@@ -451,8 +451,8 @@ function cmdHooksInstall() {
   const huskyDir = path.join(cwd, ".husky");
   const gitHooksDir = path.join(cwd, ".git", "hooks");
 
-  const prepareCommitMsg = 'commit-ai prepare-commit-msg "$1" "$2"\n';
-  const commitMsg = 'commit-ai lint --edit "$1"\n';
+  const prepareCommitMsg = 'ai-commit prepare-commit-msg "$1" "$2"\n';
+  const commitMsg = 'ai-commit lint --edit "$1"\n';
 
   if (fs.existsSync(huskyDir)) {
     const prepareFile = path.join(huskyDir, "prepare-commit-msg");
@@ -524,9 +524,9 @@ async function main() {
       cmdHooksInstall();
       return;
     }
-    throw new Error("Usage: commit-ai hooks install");
+    throw new Error("Usage: ai-commit hooks install");
   }
-  throw new Error(`Unknown command: ${cmd}. Run commit-ai --help for usage.`);
+  throw new Error(`Unknown command: ${cmd}. Run ai-commit --help for usage.`);
 }
 
 main().catch((e) => {
