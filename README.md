@@ -74,7 +74,7 @@ If package root and git root differ, hook scripts **`cd`** into the package root
 
 **`package.json` (at package root)**
 
-- Adds **`commit`**, **`prepare`**, and **`devDependencies.husky`** when missing.
+- Adds **`commit`**, **`prepare`**, **`devDependencies.husky`**, and **`devDependencies.dotenv`** when missing (skips **`dotenv`** if it is already listed under **`dependencies`**, **`devDependencies`**, or **`optionalDependencies`**).
 
 **Hook files**
 
@@ -201,7 +201,7 @@ If **`core.hooksPath`** is **`.husky`** (not **`.husky/_`**), use a **single** f
 
 **Default `pre-commit`:** Husky’s **`init`** also writes **`.husky/pre-commit`** with **`pnpm test`** (or **`npm test`** / **`yarn test`**). That file is not always the one Git runs when **`core.hooksPath`** is **`.husky/_`**, but **`ai-commit init`** still removes that stock **`.husky/pre-commit`** when it matches the known template so it does not surprise you later. If you add other lines (e.g. lint-staged), the file is left unchanged.
 
-**Already using Husky?** If **`.husky/_/h`** exists, **`npx husky@9 init`** is not run again. **`package.json`** is only amended for missing **`commit`**, **`prepare`**, or **`devDependencies.husky`**. Existing **`prepare-commit-msg`** and **`commit-msg`** hooks are not overwritten unless you use **`ai-commit init --force`**.
+**Already using Husky?** If **`.husky/_/husky.sh`** exists, **`npx husky@9 init`** is not run again. **`package.json`** is only amended for missing **`commit`**, **`prepare`**, **`devDependencies.husky`**, or **`dotenv`** (see above). Existing **`prepare-commit-msg`** and **`commit-msg`** hooks are not overwritten unless you use **`ai-commit init --force`**.
 
 ---
 
