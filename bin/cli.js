@@ -232,7 +232,7 @@ function cmdInit(argv) {
       packageJsonChanged = changed;
       if (changed) {
         process.stdout.write(
-          "Updated package.json (commit script, prepare, and/or devDependencies.husky).\n",
+          "Updated package.json (commit script, prepare, and/or devDependencies: husky, dotenv).\n",
         );
       }
       warnIfPrepareMissingHusky(pkgPath);
