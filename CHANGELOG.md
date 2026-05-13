@@ -1,3 +1,31 @@
+# v2.6.3 — 2026-05-13
+
+## Highlights
+- commit: Merge pull request #30 from verndale/fix/setup (79aa123)
+- commit: Merge pull request #29 from verndale/dependabot/npm_and_yarn/npm_and_yarn-053c9c4054 (f55e07c)
+- fix(lib): Update package.json to include dotenv dependency (076cda3)
+- chore(deps): bump fast-uri in the npm_and_yarn group across 1 directory (403fc57)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Fixes
+- fix(lib): Update package.json to include dotenv dependency (076cda3)
+
+### Chore
+- chore(deps): bump fast-uri in the npm_and_yarn group across 1 directory (403fc57)
+
+### Other (unknown)
+- commit: Merge pull request #29 from verndale/dependabot/npm_and_yarn/npm_and_yarn-053c9c4054 (f55e07c)
+- commit: Merge pull request #30 from verndale/fix/setup (79aa123)
+
+## Full commit list
+- 79aa123 commit: Merge pull request #30 from verndale/fix/setup
+- f55e07c commit: Merge pull request #29 from verndale/dependabot/npm_and_yarn/npm_and_yarn-053c9c4054
+- 076cda3 fix(lib): Update package.json to include dotenv dependency
+- 403fc57 chore(deps): bump fast-uri in the npm_and_yarn group across 1 directory
+
 # v2.6.2 — 2026-04-06
 
 ## Highlights
