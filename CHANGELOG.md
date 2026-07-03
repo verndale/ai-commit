@@ -1,3 +1,23 @@
+# v2.7.0 — 2026-07-03
+
+## Highlights
+- commit: Merge pull request #31 from verndale/fix/scaffold (3376ffc)
+- feat(lib): Add support for flat workspace layout (91b3a64)
+
+## Breaking changes
+- None
+
+## Changes by type
+### Features
+- feat(lib): Add support for flat workspace layout (91b3a64)
+
+### Other (unknown)
+- commit: Merge pull request #31 from verndale/fix/scaffold (3376ffc)
+
+## Full commit list
+- 3376ffc commit: Merge pull request #31 from verndale/fix/scaffold
+- 91b3a64 feat(lib): Add support for flat workspace layout
+
 # v2.6.3 — 2026-05-13
 
 ## Highlights
