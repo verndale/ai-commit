@@ -32,6 +32,7 @@ const {
   removeHuskyDefaultPreCommitIfPresent,
   mergePackageJsonForAiCommit,
   warnIfPrepareMissingHusky,
+  initWorkspaceFlat,
 } = require("../lib/init-workspace.js");
 
 function presetPath() {
@@ -192,6 +193,14 @@ function cmdInit(argv) {
     process.stderr.write(
       "warning: could not resolve git repository root; skipped Husky and hooks.\n",
     );
+    return;
+  }
+
+  // --workspace (subdir layout): install the flat, husky-free CN layout at the git root —
+  // git-config core.hooksPath + committed normalized hooks + a root package.json (created if
+  // absent) carrying a commit delegator and a git-config prepare. No husky is needed at the root.
+  if (workspace && path.resolve(packageRoot) !== path.resolve(gitRoot)) {
+    initWorkspaceFlat({ cwd, gitRoot, packageRoot, force });
     return;
   }
 
